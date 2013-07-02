@@ -5,6 +5,9 @@
  
  /
  /set
+ /get
+ /help		-- list all availables commands
+ 
  + modular UDP ntp time client via a library
  
 
@@ -25,7 +28,9 @@
 /**
  * personnals libs
  */
+#include "debug.h"
 #include "ntp_time.h"
+
 //#include "http_action.h"
 
 EthernetServer server(80);
@@ -40,6 +45,8 @@ byte mac[] = {
 
 int ledPin = 13;                 // LED connected to digital pin 13
 
+// comment to disable debug mode
+#define DEBUG 1
 
 String time = "n/a";
 
@@ -68,25 +75,26 @@ void setup() {
 
   // start the Ethernet connection:
   if (Ethernet.begin(mac) == 0) {
-    Serial.println("Failed to configure Ethernet using DHCP");
+    _LOG("Failed to configure Ethernet using DHCP");
     // no point in carrying on, so do nothing forevermore:
     for(;;)
       ;
   }
   // print your local IP address:
-  Serial.print("My IP address: ");
+  _LOG("My IP address: ");
   for (byte thisByte = 0; thisByte < 4; thisByte++) {
     // print the value of each byte of the IP address:
-    Serial.print(Ethernet.localIP()[thisByte], DEC);
-    Serial.print("."); 
+    _LOG((Ethernet.localIP()[thisByte], DEC));
+    //_LOG(printf("%d", Ethernet.localIP()[thisByte], DEC));
+    _LOG("."); 
   }
-  Serial.println();
+
 
   // start the Ethernet connection and the server:
 
   server.begin();
-  Serial.print("server is at ");
-  Serial.println(Ethernet.localIP());
+  //_LOG("server is at ");
+  //_LOG_LN(Ethernet.localIP());
 
   int ledPin = 13;                 // LED connected to digital pin 13
   digitalWrite(ledPin, HIGH);   // sets the LED on
@@ -94,6 +102,8 @@ void setup() {
 
 	// ntp initialisation	
 	ntp_setup();
+
+	_LOG_LN("Setup Done !");
 }
 
 
@@ -148,8 +158,7 @@ void send_pin_data(EthernetClient client) {
 	client.print(time);
 	client.print("\",");
 
-
-  client.print("\"nop\":0}");
+	client.print("\"nop\":0}");
   //client.flush();
 }
 
