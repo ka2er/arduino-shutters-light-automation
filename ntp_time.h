@@ -2,7 +2,6 @@
 
 
 /* NTP part */
-//String time = String(100);
 
 unsigned int localPort = 8888;      // local port to listen for UDP packets
 IPAddress timeServer(132, 163, 4, 101); // time-a.timefreq.bldrdoc.gov NTP server
@@ -26,16 +25,41 @@ EthernetUDP Udp;
 
 /* end of NTP client defs*/
 
-
+/**
+ * setup NTP lib
+ */
 void ntp_setup() {
 	// UDP listening
 	Udp.begin(localPort);
 }
 
 /**
+ * read time from NTP server
+ *
+ * @return timestamp
+ */
+unsigned long getNtpTime() {
+	
+	// send request packet
+	_requestNtpTime(timeServer);
+	
+	// listen for response
+	_LOG("NTP Time is : ");
+	unsigned long ts = _checkForNtpResponse();
+	if(ts)
+		_LOG(ts);
+	else
+		_LOG("n/a");
+		
+	return ts;
+}
+
+//------------------------------------------------------------------------------
+
+/**
  * create an NTP request and send it
  */ 
-void requestNtpTime(IPAddress& address) {
+void _requestNtpTime(IPAddress& address) {
 	// set all bytes in the buffer to 0
 	memset(packetBuffer, 0, NTP_PACKET_SIZE); 
 	// Initialize values needed to form NTP request
@@ -61,7 +85,7 @@ void requestNtpTime(IPAddress& address) {
 /**
  * listen for NTP response and parse it
  */
-unsigned long checkForNtpResponse() {
+unsigned long _checkForNtpResponse() {
   
 	// wait to see if a reply is available
 	delay(1000);  
@@ -113,23 +137,5 @@ unsigned long checkForNtpResponse() {
 }
 
 
-unsigned long getNtpTime() {
-	
-	// ntp_setup (only one time !!!)
-	
-	
-	// send request packet
-	requestNtpTime(timeServer);
-	
-	// listen for response
-	_LOG("NTP Time is : ");
-	unsigned long ts = checkForNtpResponse();
-	if(ts)
-		_LOG(ts);
-	else
-		_LOG("n/a");
-		
-	return ts;
-	
-}
+
 

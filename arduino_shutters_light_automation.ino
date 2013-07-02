@@ -48,6 +48,8 @@ int ledPin = 13;                 // LED connected to digital pin 13
 // comment to disable debug mode
 #define DEBUG 1
 
+
+// last NTP time read
 String time = "n/a";
 
 
