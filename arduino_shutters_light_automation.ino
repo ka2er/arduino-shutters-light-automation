@@ -5,6 +5,7 @@
  
  /
  /set
+ + modular UDP ntp time client via a library
  
 
  adapted from
@@ -21,6 +22,10 @@
 #include <SPI.h>
 #include <Ethernet.h>
 
+/**
+ * personnals libs
+ */
+#include "ntp_time.h"
 //#include "http_action.h"
 
 EthernetServer server(80);
@@ -36,10 +41,20 @@ byte mac[] = {
 int ledPin = 13;                 // LED connected to digital pin 13
 
 
+String time = "n/a";
+
+
+
+/**
+ * possible actions on REST API
+ */
 enum actions {
   A_UNDEF,
   A_READ,
-  A_SET
+  A_SET,
+  A_HELP,
+  A_REFRESH_TIME,
+  A_CLOSE_SHUTTERS
 };
 
 
@@ -77,6 +92,8 @@ void setup() {
   digitalWrite(ledPin, HIGH);   // sets the LED on
   Serial.println("Setup Done !");
 
+	// ntp initialisation	
+	ntp_setup();
 }
 
 
@@ -127,12 +144,21 @@ void send_pin_data(EthernetClient client) {
 
   }
 
+	client.print("\"time\":\"");
+	client.print(time);
+	client.print("\",");
 
 
   client.print("\"nop\":0}");
   //client.flush();
 }
 
+
+//------------------------------------------------------------------------------
+
+/**
+ * main loop program
+ */
 void loop() {
 
 
@@ -149,34 +175,39 @@ void loop() {
 
     // an http request ends with a blank line
     boolean currentLineIsBlank = true;
-    while (client.connected()) {
-      if (client.available()) {
-        char c = client.read();
-        request += c;
-        Serial.write(c);
+	while (client.connected()) {
+		if (client.available()) {
+			char c = client.read();
+			request += c;
+			Serial.write(c);
 
-        // if you've gotten to the end of the line (received a newline
-        // character) and the line is blank, the http request has ended,
-        // so you can send a reply
-        if (c == '\n' && currentLineIsBlank) {
+			// if you've gotten to the end of the line (received a newline
+			// character) and the line is blank, the http request has ended,
+			// so you can send a reply
+			if (c == '\n' && currentLineIsBlank) {
 
-          switch(action) {
+				switch(action) {
 
-          case A_SET:
-            client.println("HTTP/1.1 200 OK");
-            client.println("Content-Type: application/json");
-            client.println("Connnection: close");
-            client.println();
-            client.print("{\"error\":\"tell me more\"}");
-            break;
-          case A_READ:
-            send_pin_data(client);
-            break;
-          default:
-            break;          
-          }
-        break; // break while loop
-        }
+					case A_SET:
+						client.println("HTTP/1.1 200 OK");
+						client.println("Content-Type: application/json");
+						client.println("Connnection: close");
+						client.println();
+						client.print("{\"error\":\"tell me more\"}");
+						break;
+					case A_READ:
+						send_pin_data(client);
+						break;
+
+					case A_REFRESH_TIME:
+						time = String(getNtpTime());
+						break;
+
+					default:
+						break;          
+				}
+			break; // break while loop
+		}
         
         
         if (c == '\n') {
@@ -191,10 +222,22 @@ void loop() {
             s_action.toLowerCase();
            
             if(s_action == "/set") {
-              action = A_SET;
+             	action = A_SET;
+            }
+            else if(s_action == "/help") {
+            	action = A_HELP;
+            }
+            else if(s_action == "/close-shutters"){
+            	action == A_CLOSE_SHUTTERS;
+            }
+            else if(s_action == "/get"){
+              	action = A_READ;
+            }
+            else if(s_action == "/update-time"){
+            	action = A_REFRESH_TIME;
             }
             else {
-              action = A_READ;
+            	action = A_HELP;
             }
 
             Serial.println("request is "+s_action);
