@@ -8,7 +8,20 @@
  /get
  /help		-- list all availables commands
  
+ --
+ @TODO:
+ 
  + modular UDP ntp time client via a library
+ + make lib for ambiant LED light
+ + read temperature data
+ - auto refresh sensor read at a defined rate
+ - publish to pachube temperature and light data
+ - implement REST help method
+ - implement REST close-shutters method
+ - find a beautiful case !
+ 
+ --
+ 
  
 
  adapted from
@@ -35,6 +48,10 @@
 #include "ntp_time.h"
 #include "light_sensor.h"
 
+#include <OneWire.h>
+#include "temperature_sensor.h"
+
+
 //#include "http_action.h"
 
 EthernetServer server(80);
@@ -53,8 +70,12 @@ int ledPin = 13;                 // LED connected to digital pin 13
 
 
 
-//  pin for light sensor
+// pin for light sensor
 #define LIGHT_SENSOR_ANALOG_INPUT 0
+
+// pin for temperature sensor
+#define TEMPERATURE_SENSOR_DIGITAL_PIN 4
+TemperatureSensor temp(TEMPERATURE_SENSOR_DIGITAL_PIN);
 
 // last NTP time read
 String time = "n/a";
@@ -185,7 +206,14 @@ void loop() {
 	// read light sensor level (0-100) and wait for 2 sec
 	_LOG("light level : ");
 	_LOG_LN(get_light_level());	
+	
+	// read temperature from sensor
+	_LOG("temperature : ");
+	_LOG_LN(temp.get());	
+	
 	delay(2000);
+	
+	
 
 	// listen for incoming clients
 	EthernetClient client = server.available();
