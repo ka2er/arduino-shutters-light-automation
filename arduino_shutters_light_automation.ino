@@ -28,8 +28,12 @@
 /**
  * personnals libs
  */
+ // comment to disable debug mode
+#define DEBUG
+ 
 #include "debug.h"
 #include "ntp_time.h"
+#include "light_sensor.h"
 
 //#include "http_action.h"
 
@@ -45,9 +49,12 @@ byte mac[] = {
 
 int ledPin = 13;                 // LED connected to digital pin 13
 
-// comment to disable debug mode
-#define DEBUG 1
 
+
+
+
+//  pin for light sensor
+#define LIGHT_SENSOR_ANALOG_INPUT 0
 
 // last NTP time read
 String time = "n/a";
@@ -103,7 +110,10 @@ void setup() {
   Serial.println("Setup Done !");
 
 	// ntp initialisation	
-	ntp_setup();
+	setup_ntp_time();
+	
+	// light_sensor setup
+	setup_light_sensor(LIGHT_SENSOR_ANALOG_INPUT, 255);
 
 	_LOG_LN("Setup Done !");
 }
@@ -172,11 +182,14 @@ void send_pin_data(EthernetClient client) {
  */
 void loop() {
 
+	// read light sensor level (0-100) and wait for 2 sec
+	_LOG("light level : ");
+	_LOG_LN(get_light_level());	
+	delay(2000);
 
-
-  // listen for incoming clients
-  EthernetClient client = server.available();
-  if (client) {
+	// listen for incoming clients
+	EthernetClient client = server.available();
+	if (client) {
 
  
 

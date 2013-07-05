@@ -25,36 +25,6 @@ EthernetUDP Udp;
 
 /* end of NTP client defs*/
 
-/**
- * setup NTP lib
- */
-void ntp_setup() {
-	// UDP listening
-	Udp.begin(localPort);
-}
-
-/**
- * read time from NTP server
- *
- * @return timestamp
- */
-unsigned long getNtpTime() {
-	
-	// send request packet
-	_requestNtpTime(timeServer);
-	
-	// listen for response
-	_LOG("NTP Time is : ");
-	unsigned long ts = _checkForNtpResponse();
-	if(ts)
-		_LOG(ts);
-	else
-		_LOG("n/a");
-		
-	return ts;
-}
-
-//------------------------------------------------------------------------------
 
 /**
  * create an NTP request and send it
@@ -137,5 +107,36 @@ unsigned long _checkForNtpResponse() {
 }
 
 
+//------------------------------------------------------------------------------
+
+
+/**
+ * setup NTP lib
+ */
+void setup_ntp_time() {
+	// UDP listening
+	Udp.begin(localPort);
+}
+
+/**
+ * read time from NTP server
+ *
+ * @return timestamp
+ */
+unsigned long getNtpTime() {
+	
+	// send request packet
+	_requestNtpTime(timeServer);
+	
+	// listen for response
+	_LOG("NTP Time is : ");
+	unsigned long ts = _checkForNtpResponse();
+	if(ts)
+		_LOG(ts);
+	else
+		_LOG("n/a");
+		
+	return ts;
+}
 
 
