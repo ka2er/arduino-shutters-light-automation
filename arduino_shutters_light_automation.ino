@@ -14,8 +14,9 @@
  + modular UDP ntp time client via a library
  + make lib for ambiant LED light
  + read temperature data
- - auto refresh sensor read at a defined rate
- - publish to pachube temperature and light data
+ + auto refresh sensor read at a defined rate
+ + publish to thingspeak temperature and light data
+ 
  - implement REST help method
  - implement REST close-shutters method
  - find a beautiful case !
@@ -38,6 +39,7 @@
 #include <SPI.h>
 #include <Ethernet.h>
 
+#include <stdlib.h>
 /**
  * personnals libs
  */
@@ -51,6 +53,7 @@
 #include <OneWire.h>
 #include "temperature_sensor.h"
 
+#include "thingspeak_client.h"
 
 //#include "http_action.h"
 
@@ -68,6 +71,8 @@ int ledPin = 13;                 // LED connected to digital pin 13
 
 
 
+// default refresh rate (ms)
+#define SENSOR_REFRESH_RATE 16000
 
 
 // pin for light sensor
@@ -77,6 +82,8 @@ int ledPin = 13;                 // LED connected to digital pin 13
 #define TEMPERATURE_SENSOR_DIGITAL_PIN 4
 TemperatureSensor temp(TEMPERATURE_SENSOR_DIGITAL_PIN);
 
+// thingspeak API write key
+#define THINGSPEAK_API_KEY "PUT_YOUR_API_KEY"
 // last NTP time read
 String time = "n/a";
 
@@ -210,9 +217,13 @@ void loop() {
 	// read temperature from sensor
 	_LOG("temperature : ");
 	_LOG_LN(temp.get());	
+
+
+	char temp_value[] = "----";
+	dtostrf(temp.get(), 4, 1, temp_value);
+	thingspeak_post(String(THINGSPEAK_API_KEY), String(temp_value), String(get_light_level()));
 	
-	delay(2000);
-	
+	delay(SENSOR_REFRESH_RATE);
 	
 
 	// listen for incoming clients
